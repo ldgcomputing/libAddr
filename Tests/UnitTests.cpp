@@ -10,6 +10,32 @@
 //  Copyright © 2019 Louis Gehrig. All rights reserved.
 //
 
+/***
+
+	MIT License
+
+	Copyright (c) 2019 Louis Gehrig
+
+	Permission is hereby granted, free of charge, to any person obtaining a copy
+	of this software and associated documentation files (the "Software"), to deal
+	in the Software without restriction, including without limitation the rights
+	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+	copies of the Software, and to permit persons to whom the Software is
+	furnished to do so, subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in all
+	copies or substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+	SOFTWARE.
+
+***/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -50,6 +76,10 @@ const char * TEST_ADDR [] = {
 	"5397 Cedar Lake Road Apt",
 	"123 E Rd",
 	"123 STATE HWY 715",
+	"Rural Route 2 Box 123",
+	"Rural Rte 5 # 332",
+	"Rural Rte 5 #332",
+	"Rural Rte 5#332",
 	0x0
 };
 
@@ -68,6 +98,10 @@ const S_KNOWN_OUTPUT TEST_OUTPUTS [] = {
 	{ "5397", "", "CEDAR LAKE", "RD", "", "APT", "", "", "", "" },
 	{ "123", "", "E", "RD", "", "", "", "", "", "" },
 	{ "123", "", "STATE HWY 715", "", "", "", "", "", "", "" },
+	{ "" , "" , "" , "" , "" , "" , "" , "" , "RURAL ROUTE 2 BOX 123" , "" },
+	{ "" , "" , "" , "" , "" , "" , "" , "" , "RURAL ROUTE 5 BOX 332" , "" },
+	{ "" , "" , "" , "" , "" , "" , "" , "" , "RURAL ROUTE 5 BOX 332" , "" },
+	{ "" , "" , "" , "" , "" , "" , "" , "" , "RURAL ROUTE 5 BOX 332" , "" },
 	{ "" , "" , "" , "" , "" , "" , "" , "" , "" , "" }
 
 };
@@ -79,7 +113,7 @@ const S_KNOWN_OUTPUT TEST_OUTPUTS [] = {
 int main( int argc, char **argv) {
 
 	// Constants
-	const char * FAILURE_OUTPUT_FORMAT = "%-64s  %-64s\n";
+	const char * FAILURE_OUTPUT_FORMAT = "%-15s %-64s  %-64s\n";
 
 	// Variables
 	bool bAllPassed = true;
@@ -116,19 +150,19 @@ int main( int argc, char **argv) {
 		else {
 			++ nFailed;
 			printf( "FAILURE for input ===== %s =====\n", testInput);
-			printf( FAILURE_OUTPUT_FORMAT, "Expected", "Obtained");
-			printf( FAILURE_OUTPUT_FORMAT, "--------", "--------");
-			printf( FAILURE_OUTPUT_FORMAT,testOutput->pStreetNumber,		dl.getStreetNumber());
-			printf( FAILURE_OUTPUT_FORMAT,testOutput->pPreDirectional,		dl.getPreDirectional());
-			printf( FAILURE_OUTPUT_FORMAT,testOutput->pStreetName,			dl.getStreetName());
-			printf( FAILURE_OUTPUT_FORMAT,testOutput->pStreetType,			dl.getStreetType());
-			printf( FAILURE_OUTPUT_FORMAT,testOutput->pPostDirectional,		dl.getPostDirectional());
-			printf( FAILURE_OUTPUT_FORMAT,testOutput->pUnitType,			dl.getUnitType());
-			printf( FAILURE_OUTPUT_FORMAT,testOutput->pUnitNumber,			dl.getUnitNumber());
-			printf( FAILURE_OUTPUT_FORMAT,testOutput->pPOBox,				dl.getPOBox());
-			printf( FAILURE_OUTPUT_FORMAT,testOutput->pRuralRoute,			dl.getRuralRoute());
-			printf( FAILURE_OUTPUT_FORMAT,testOutput->pRemainder,			dl.getRemainder());
-			printf( FAILURE_OUTPUT_FORMAT, "--------", "--------");
+			printf( FAILURE_OUTPUT_FORMAT, "Field", "Expected", "Obtained");
+			printf( FAILURE_OUTPUT_FORMAT, "-----", "--------", "--------");
+			printf( FAILURE_OUTPUT_FORMAT, "Street Number",	testOutput->pStreetNumber,		dl.getStreetNumber());
+			printf( FAILURE_OUTPUT_FORMAT, "Pre Dir",		testOutput->pPreDirectional,		dl.getPreDirectional());
+			printf( FAILURE_OUTPUT_FORMAT, "Street Name",	testOutput->pStreetName,			dl.getStreetName());
+			printf( FAILURE_OUTPUT_FORMAT, "Street Type",	testOutput->pStreetType,			dl.getStreetType());
+			printf( FAILURE_OUTPUT_FORMAT, "Post Dir",		testOutput->pPostDirectional,		dl.getPostDirectional());
+			printf( FAILURE_OUTPUT_FORMAT, "Unit Type",		testOutput->pUnitType,			dl.getUnitType());
+			printf( FAILURE_OUTPUT_FORMAT, "Unit Num",		testOutput->pUnitNumber,			dl.getUnitNumber());
+			printf( FAILURE_OUTPUT_FORMAT, "PO Bpx",		testOutput->pPOBox,				dl.getPOBox());
+			printf( FAILURE_OUTPUT_FORMAT, "Rural Route",	testOutput->pRuralRoute,			dl.getRuralRoute());
+			printf( FAILURE_OUTPUT_FORMAT, "Remainder",		testOutput->pRemainder,			dl.getRemainder());
+			printf( FAILURE_OUTPUT_FORMAT, "-----", "--------", "--------");
 		}
 
 	}

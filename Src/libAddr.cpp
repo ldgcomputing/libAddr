@@ -6,6 +6,32 @@
 //  Copyright © 2019 Louis Gehrig. All rights reserved.
 //
 
+/***
+
+	MIT License
+
+	Copyright (c) 2019 Louis Gehrig
+
+	Permission is hereby granted, free of charge, to any person obtaining a copy
+	of this software and associated documentation files (the "Software"), to deal
+	in the Software without restriction, including without limitation the rights
+	to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+	copies of the Software, and to permit persons to whom the Software is
+	furnished to do so, subject to the following conditions:
+
+	The above copyright notice and this permission notice shall be included in all
+	copies or substantial portions of the Software.
+
+	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+	SOFTWARE.
+
+***/
+
 // Standard includes
 #include <stdlib.h>
 #include <stdio.h>
@@ -33,6 +59,7 @@ namespace libAddr {
 	// Construct an address compression
 	const char * addressCompression::KNOWN_DIRECTIONALS [] = { "E" , "N" , "S" , "W" , "NE" , "NW" , "SE" , "SW" , 0x0 };
 	const char * addressCompression::KNOWN_PO_BOX_HEADERS [] = { "POBOX " , "PO BOX " , "PO " , 0x0 };
+	const char * addressCompression::KNOWN_RURAL_ROUTE_HEADERS [] = { "RURAL ROUTE ", "RURAL RTE ", "RR ", 0x0 };
 	S_CONVERSION_TYPE addressCompression::KNOWN_STREET_TYPES [] = {
 		{ "ALLEE" , "ALY" },
 		{ "ALLEY" , "ALY" },
@@ -808,6 +835,18 @@ namespace libAddr {
 			}
 		}
 
+		// Rural route?
+		bool isRuralRoute = false;
+		for( int nRR = 0x0; addressCompression::KNOWN_RURAL_ROUTE_HEADERS [nRR] != (const char *) 0x0; ++ nRR) {
+			if( 0x0 == strncmp( addressCompression::KNOWN_RURAL_ROUTE_HEADERS [nRR], copyValue, strlen( addressCompression::KNOWN_RURAL_ROUTE_HEADERS [nRR]))) {
+				// Remove RR prefix - clears for later tokenization
+				memset( copyValue, ' ', strlen(addressCompression::KNOWN_RURAL_ROUTE_HEADERS [nRR]));
+				isRuralRoute = true;
+				break;
+			}
+		}
+
+
 		// Tokenize
 		char *lasts = (char *) 0x0;
 		char *token = strtok_r( copyValue, " \t", &lasts);
@@ -827,6 +866,56 @@ namespace libAddr {
 			}
 			return;
 		}
+
+		// Rural route?
+		if( isRuralRoute) {
+
+			int nextToken = 1;
+
+			// Potential case of "Rural Route RR#BOX"
+			if( allTokens.size() == 1) {
+				allTokens.clear();
+				lasts = (char *) 0x0;
+				token = strtok_r( copyValue, " \t#", &lasts);
+				while( (char *) 0x0 != token) {
+					allTokens.push_back( token);
+					token = strtok_r( (char *) 0x0, " \t", &lasts);
+				}
+			}
+
+			// Enough for rural route & box
+			if( allTokens.size() >= 2) {
+
+				// Or rural route as least!
+				sprintf( acRuralRoute, "RURAL ROUTE %s", allTokens[0]);
+
+				// Jump the box header
+				if( (0x0 == strcmp( allTokens[nextToken], "#")) ||
+				   	(0x0 == strcmp( allTokens[nextToken], "BOX")) ||
+				   	(0x0 == strcmp( allTokens[nextToken], "UNIT"))) {
+					++ nextToken;
+				}
+
+				// Capture the box
+				if( allTokens.size() > nextToken) {
+					strcat( acRuralRoute, " BOX ");
+					if( '#' != allTokens[nextToken][0])
+						strcat( acRuralRoute, allTokens[nextToken]);
+					else
+						strcat( acRuralRoute, (allTokens[nextToken]) + 1);
+					++ nextToken;
+				}
+
+				// And remainder
+				for( ; allTokens.size() > nextToken; ++ nextToken) {
+					strcat( acRemainder, allTokens[nextToken]);
+					strcat( acRemainder, " ");
+				}
+			}
+
+			return;
+
+		} // endif rural route
 
 		// Starting from the right look for a sreet tyoe
 		unsigned long nStreetTypePos = -1;
